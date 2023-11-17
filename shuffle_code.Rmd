@@ -1,0 +1,77 @@
+---
+title: "Pker texas hold'em"
+output: html_document
+date: "2023-11-15"
+---
+
+Creación del mazo de cartas, se crea como un data frame
+
+```{r deck}
+deck <- data.frame(
+  face = c("king", "queen", "jack", "ten", "nine", "eight", "seven", "six",
+    "five", "four", "three", "two", "ace", "king", "queen", "jack", "ten", 
+    "nine", "eight", "seven", "six", "five", "four", "three", "two", "ace", 
+    "king", "queen", "jack", "ten", "nine", "eight", "seven", "six", "five", 
+    "four", "three", "two", "ace", "king", "queen", "jack", "ten", "nine", 
+    "eight", "seven", "six", "five", "four", "three", "two", "ace"),  
+  suit = c("spades", "spades", "spades", "spades", "spades", "spades", 
+    "spades", "spades", "spades", "spades", "spades", "spades", "spades", 
+    "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", 
+    "clubs", "clubs", "clubs", "clubs", "clubs", "diamonds", "diamonds", 
+    "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", 
+    "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "hearts", 
+    "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", 
+    "hearts", "hearts", "hearts", "hearts", "hearts"), 
+  value = c(13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 
+    7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 
+    10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+)
+```
+
+
+
+```{r}
+
+
+
+shuffle <- function(deck) { 
+  random <- sample(1:52, size = 52)
+  deck[random, ]
+}
+
+shuffle_deck <- shuffle(deck)
+
+dealer <- function(shuffle_deck, n){
+  
+  cards_per_player <- 2
+  players <- vector("list", length = n)
+  
+  for(i in 1:n){
+    firts <- (i - 1) * cards_per_player + 1
+    last <- i * cards_per_player
+    players[[i]] <- shuffle_deck[firts:last, ]
+
+  }
+  
+  remaining_cards <- shuffle_deck[(n * cards_per_player + 1):(n * cards_per_player + 5), ]
+
+  list(players = players, table = remaining_cards)
+}
+
+numPlayers <- 2
+
+players <- dealer(shuffle_deck, numPlayers)
+
+for (i in 1:numPlayers) {
+  print(players$players[[i]])
+}
+cat("table cards: ")
+print(players$table)
+
+```
+
+
+
+
+
+
