@@ -4,7 +4,7 @@ output: html_document
 date: "2023-11-15"
 ---
   
-  Creación del mazo de cartas, se crea como un data frame
+Creación del mazo de cartas, se crea como un data frame
 
 ```{r deck}
 deck <- data.frame(
@@ -77,11 +77,6 @@ sort_cards <- function(hand_Table,hand_Player){
   return(sort_c) 
 }
 
-prueba <- sort_cards(players$table,players$players[[2]])
-head(prueba)
-
-prueba[1,3]
-
 #function for royal flush 
 royal_flush <- function(cards){
   n=6
@@ -138,10 +133,82 @@ royal_flush <- function(cards){
   return(c(0,0))
 }
 
-prueba_royal_flush <- data.frame(
-  face = c("king", "queen", "jack", "ten", "ace"),  
+#function for straigh flush
+straigh_flush <- function(cards){
+  HC = 0
+  counter = 0
+  straigh = FALSE
+  Flush = FALSE
+  weigths = 0
+  broke = FALSE
+  for (i in 1:6) {
+    if(cards[i,3] == (cards[i+1,3]-1) & !broke){
+      counter = counter+1
+      HC = cards[i+1,3]
+      if(weigths==0){
+        weigths = weigths + cards[i,3] + HC
+      }
+      else{
+        weigths = weigths + HC
+      }
+    }
+    if(cards[i+1,3] - cards[i,3] > 1 & counter < 4){
+      counter = 0
+    }
+    if(cards[i+1,3] - cards[i,3] > 1 & counter >= 4){
+      broke = !broke
+    }
+    
+  }
+  
+  
+  if(counter >= 4){
+    straigh = TRUE
+  }
+  
+  s = 0
+  c = 0
+  h = 0
+  d = 0
+  
+  for (i in 1:7) {
+    if(cards[i,2] == "spades"){
+      s = s + cards[i,3]
+    }
+    if(cards[i,2] == "clubs"){
+      c = c + cards[i,3]
+    }
+    if(cards[i,2] == "hearts"){
+      h = h + cards[i,3]
+    }
+    if(cards[i,2] == "diamonds"){
+      d = d + cards[i,3]
+    }
+  }
+  if(d == weigths | c == weigths | s == weigths | h == weigths){
+    Flush = TRUE
+  }
+  
+  if(straigh & Flush){
+    return(c(9,HC))
+  }
+  if(straigh & !Flush){
+    return(c(5,HC))
+  }
+  if(!straigh & !Flush){
+    return(c(0,0))
+  }
+  return(c(0,0))
+}
+
+  
+
+
+
+prueba_straigh_flush <- data.frame(
+  face = c("nine", "eigth", "seven", "six", "five"),  
   suit = c("spades", "spades", "spades", "spades", "spades"), 
-  value = c(13, 12, 11, 10, 1)
+  value = c(9, 8, 7, 6, 5)
 )
 
 prueba_mano <- data.frame(
@@ -150,14 +217,8 @@ prueba_mano <- data.frame(
   value = c(13,12)
 )
 
-prueba_royal_flush <- sort_cards(prueba_royal_flush,prueba_mano)
-head(prueba_royal_flush)
+prueba_straigh_flush <- sort_cards(prueba_straigh_flush,prueba_mano)
+head(prueba_straigh_flush)
 
-resultado <- royal_flush(prueba_royal_flush)
+resultado <- straigh_flush(prueba_straigh_flush)
 resultado
-
-
-
-
-
-
