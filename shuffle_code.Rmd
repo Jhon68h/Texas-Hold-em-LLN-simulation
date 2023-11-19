@@ -1,30 +1,30 @@
 ---
-title: "Pker texas hold'em"
+  title: "Pker texas hold'em"
 output: html_document
 date: "2023-11-15"
 ---
-
-Creación del mazo de cartas, se crea como un data frame
+  
+  Creación del mazo de cartas, se crea como un data frame
 
 ```{r deck}
 deck <- data.frame(
   face = c("king", "queen", "jack", "ten", "nine", "eight", "seven", "six",
-    "five", "four", "three", "two", "ace", "king", "queen", "jack", "ten", 
-    "nine", "eight", "seven", "six", "five", "four", "three", "two", "ace", 
-    "king", "queen", "jack", "ten", "nine", "eight", "seven", "six", "five", 
-    "four", "three", "two", "ace", "king", "queen", "jack", "ten", "nine", 
-    "eight", "seven", "six", "five", "four", "three", "two", "ace"),  
+           "five", "four", "three", "two", "ace", "king", "queen", "jack", "ten", 
+           "nine", "eight", "seven", "six", "five", "four", "three", "two", "ace", 
+           "king", "queen", "jack", "ten", "nine", "eight", "seven", "six", "five", 
+           "four", "three", "two", "ace", "king", "queen", "jack", "ten", "nine", 
+           "eight", "seven", "six", "five", "four", "three", "two", "ace"),  
   suit = c("spades", "spades", "spades", "spades", "spades", "spades", 
-    "spades", "spades", "spades", "spades", "spades", "spades", "spades", 
-    "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", 
-    "clubs", "clubs", "clubs", "clubs", "clubs", "diamonds", "diamonds", 
-    "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", 
-    "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "hearts", 
-    "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", 
-    "hearts", "hearts", "hearts", "hearts", "hearts"), 
+           "spades", "spades", "spades", "spades", "spades", "spades", "spades", 
+           "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", 
+           "clubs", "clubs", "clubs", "clubs", "clubs", "diamonds", "diamonds", 
+           "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", 
+           "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "hearts", 
+           "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", 
+           "hearts", "hearts", "hearts", "hearts", "hearts"), 
   value = c(13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 
-    7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 
-    10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+            7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 
+            10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
 )
 ```
 
@@ -48,13 +48,13 @@ dealer <- function(shuffle_deck, n){
   
   for(i in 1:n){
     firts <- (i - 1) * cards_per_player + 1
-    last <- i * cards_per_player
+    last <- 2*i
     players[[i]] <- shuffle_deck[firts:last, ]
-
+    
   }
   
   remaining_cards <- shuffle_deck[(n * cards_per_player + 1):(n * cards_per_player + 5), ]
-
+  
   list(players = players, table = remaining_cards)
 }
 
@@ -68,7 +68,93 @@ for (i in 1:numPlayers) {
 cat("table cards: ")
 print(players$table)
 
+
 ```
+#function to extract and sort the cards 
+sort_cards <- function(hand_Table,hand_Player){
+  cards <- merge(hand_Table,hand_Player, all = TRUE)
+  sort_c <- ordenado <- cards[order(cards$value),]
+  return(sort_c) 
+}
+
+prueba <- sort_cards(players$table,players$players[[2]])
+head(prueba)
+
+prueba[1,3]
+
+#function for royal flush 
+royal_flush <- function(cards){
+  n=6
+  counter = 0
+  straigh = TRUE
+  Flush = FALSE
+  if(cards[1,3] == 1 & cards[7,3] == 13){
+    while (straigh & n>1) {
+      if((cards[n,3] == (cards[n+1,3]-1)) & counter<3){
+        counter = counter +1
+      }
+      if((cards[n+1,3]-cards[n,3]) > 1 & counter<3){
+        straigh = FALSE
+      }
+      n = n-1
+    }
+    
+    s = 0
+    c = 0
+    h = 0
+    d = 0
+    
+    cards[1,3] = 14
+    
+    for (i in 1:7) {
+      if(cards[i,2] == "spades"){
+        s = s + cards[i,3]
+      }
+      if(cards[i,2] == "clubs"){
+        c = c + cards[i,3]
+      }
+      if(cards[i,2] == "hearts"){
+        h = h + cards[i,3]
+      }
+      if(cards[i,2] == "diamonds"){
+        d = d + cards[i,3]
+      }
+    }
+    
+    if(d >= 60 | c >= 60 | s >= 60 | h >= 60){
+      Flush = TRUE
+    }
+    
+    if(straigh & Flush){
+      return(c(10,14))
+    }
+    if(straigh & !Flush){
+      return(c(5,14))
+    }
+    if(!straigh & !Flush){
+      return(c(0,0))
+    }
+  }
+  return(c(0,0))
+}
+
+prueba_royal_flush <- data.frame(
+  face = c("king", "queen", "jack", "ten", "ace"),  
+  suit = c("spades", "spades", "spades", "spades", "spades"), 
+  value = c(13, 12, 11, 10, 1)
+)
+
+prueba_mano <- data.frame(
+  face = c("king", "queen"),  
+  suit = c("hearts", "hearts"), 
+  value = c(13,12)
+)
+
+prueba_royal_flush <- sort_cards(prueba_royal_flush,prueba_mano)
+head(prueba_royal_flush)
+
+resultado <- royal_flush(prueba_royal_flush)
+resultado
 
 
 
