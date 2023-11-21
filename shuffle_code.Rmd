@@ -47,9 +47,9 @@ dealer <- function(shuffle_deck, n){
   players <- vector("list", length = n)
   
   for(i in 1:n){
-    firts <- (i - 1) * cards_per_player + 1
-    last <- 2*i
-    players[[i]] <- shuffle_deck[firts:last, ]
+    firts <- (i)
+    last <- (i + n)
+    players[[i]] <- merge(shuffle_deck[firts,],shuffle_deck[last,],all=TRUE)
     
   }
   
@@ -164,9 +164,6 @@ royal_flush <- function(cards){
     }
     if(straigh & !Flush){
       return(c(5,14))
-    }
-    if(!straigh & !Flush){
-      return(c(0,0))
     }
   }
   return(c(0,0))
@@ -342,7 +339,39 @@ cards_poker <- function(cards){
 }
 
 #function defining the hand 
-hand_defining <- function()
+hand_defining <- function(poker_table,hand_player){
+  
+  cards = sort_cards(poker_table,hand_player)
+  
+  hand = c(0,0)
+  aux = royal_flush(cards)
+  if(aux[1] == 10){
+    return(aux)
+  }else{
+    hand = aux
+  }
+  
+  aux = straigh_flush(cards)
+  if(aux[1]==9){
+    return(aux)
+  }
+  if(hand[2]<aux[2]){
+    hand = aux
+  }
+  
+  aux = card_flush(cards)
+  if(aux[1]==6){
+    hand = aux
+  }
+  
+  aux = cards_poker(cards)
+  if(aux[1]>hand[1]){
+    return(aux)
+  }else{
+    return(hand)
+  }
+  
+}
 
 
 #function defining
@@ -376,3 +405,6 @@ head(prueba_straigh_flush)
 
 resultado <- royal_flush(prueba_straigh_flush)
 resultado
+
+prueba <- hand_defining(prueba_straigh_flush,prueba_mano)
+prueba
