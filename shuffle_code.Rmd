@@ -1,5 +1,5 @@
 ---
-  title: "Pker texas hold'em"
+  title: "Poker texas hold'em"
 output: html_document
 date: "2023-11-15"
 ---
@@ -30,8 +30,7 @@ deck <- data.frame(
 
 
 
-```{r}
-
+```{r function shuffle}
 
 
 shuffle <- function(deck) { 
@@ -53,7 +52,12 @@ dealer <- function(shuffle_deck, n){
     
   }
   
-  remaining_cards <- shuffle_deck[(n * cards_per_player + 1):(n * cards_per_player + 5), ]
+  remaining_cards <- shuffle_deck[(n * cards_per_player + 2):(n * cards_per_player + 4), ]
+  turn <- shuffle_deck[(n * cards_per_player + 6),]
+  river <- shuffle_deck[(n * cards_per_player + 8),]
+  
+  remaining_cards <- merge(remaining_cards,turn,all = TRUE)
+  remaining_cards <- merge(remaining_cards,river,all = TRUE)
   
   list(players = players, table = remaining_cards)
 }
@@ -62,6 +66,8 @@ numPlayers <- 2
 
 players <- dealer(shuffle_deck, numPlayers)
 
+print(shuffle_deck)
+
 for (i in 1:numPlayers) {
   print(players$players[[i]])
 }
@@ -69,7 +75,10 @@ cat("table cards: ")
 print(players$table)
 
 
+
 ```
+
+```{R function for define hands}
 #function to extract and sort the cards 
 sort_cards <- function(hand_Table,hand_Player){
   cards <- merge(hand_Table,hand_Player, all = TRUE)
@@ -399,6 +408,8 @@ prueba_mano <- data.frame(
   suit = c("spades", "spades"), 
   value = c(8,9)
 )
+
+```
 
 prueba_straigh_flush <- sort_cards(prueba_straigh_flush,prueba_mano)
 head(prueba_straigh_flush)
