@@ -1,37 +1,36 @@
 ---
-title: "Pker texas hold'em"
+  title: "Poker texas hold'em"
 output: html_document
 date: "2023-11-15"
 ---
-
+  
 Creación del mazo de cartas, se crea como un data frame
 
 ```{r deck}
 deck <- data.frame(
   face = c("king", "queen", "jack", "ten", "nine", "eight", "seven", "six",
-    "five", "four", "three", "two", "ace", "king", "queen", "jack", "ten", 
-    "nine", "eight", "seven", "six", "five", "four", "three", "two", "ace", 
-    "king", "queen", "jack", "ten", "nine", "eight", "seven", "six", "five", 
-    "four", "three", "two", "ace", "king", "queen", "jack", "ten", "nine", 
-    "eight", "seven", "six", "five", "four", "three", "two", "ace"),  
+           "five", "four", "three", "two", "ace", "king", "queen", "jack", "ten", 
+           "nine", "eight", "seven", "six", "five", "four", "three", "two", "ace", 
+           "king", "queen", "jack", "ten", "nine", "eight", "seven", "six", "five", 
+           "four", "three", "two", "ace", "king", "queen", "jack", "ten", "nine", 
+           "eight", "seven", "six", "five", "four", "three", "two", "ace"),  
   suit = c("spades", "spades", "spades", "spades", "spades", "spades", 
-    "spades", "spades", "spades", "spades", "spades", "spades", "spades", 
-    "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", 
-    "clubs", "clubs", "clubs", "clubs", "clubs", "diamonds", "diamonds", 
-    "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", 
-    "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "hearts", 
-    "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", 
-    "hearts", "hearts", "hearts", "hearts", "hearts"), 
+           "spades", "spades", "spades", "spades", "spades", "spades", "spades", 
+           "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", 
+           "clubs", "clubs", "clubs", "clubs", "clubs", "diamonds", "diamonds", 
+           "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", 
+           "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "hearts", 
+           "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", 
+           "hearts", "hearts", "hearts", "hearts", "hearts"), 
   value = c(13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 
-    7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 
-    10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+            7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 
+            10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
 )
 ```
 
 
 
-```{r}
-
+```{r function shuffle}
 
 
 shuffle <- function(deck) { 
@@ -44,18 +43,23 @@ shuffle_deck <- shuffle(deck)
 dealer <- function(shuffle_deck, n){
   
   cards_per_player <- 2
-  players <- vector("list", length = n)
+  players = vector("list", length = n)
   
   for(i in 1:n){
-    firts <- (i - 1) * cards_per_player + 1
-    last <- i * cards_per_player
-    players[[i]] <- shuffle_deck[firts:last, ]
-
+    firts <- (i)
+    last <- (i + n)
+    players[[i]] <- merge(shuffle_deck[firts,],shuffle_deck[last,],all=TRUE)
+    
   }
   
-  remaining_cards <- shuffle_deck[(n * cards_per_player + 1):(n * cards_per_player + 5), ]
-
-  list(players = players, table = remaining_cards)
+  remaining_cards <- shuffle_deck[(n * cards_per_player + 2):(n * cards_per_player + 4), ]
+  turn <- shuffle_deck[(n * cards_per_player + 6),]
+  river <- shuffle_deck[(n * cards_per_player + 8),]
+  
+  remaining_cards <- merge(remaining_cards,turn,all = TRUE)
+  remaining_cards <- merge(remaining_cards,river,all = TRUE)
+  
+  return(list(players = players, table = remaining_cards))
 }
 
 numPlayers <- 2
@@ -65,13 +69,391 @@ players <- dealer(shuffle_deck, numPlayers)
 for (i in 1:numPlayers) {
   print(players$players[[i]])
 }
-cat("table cards: ")
-print(players$table)
 
 ```
 
 
 
+
+```{R function for define hands}
+#function to extract and sort the cards 
+sort_cards <- function(hand_Table,hand_Player){
+  cards <- merge(hand_Table,hand_Player, all = TRUE)
+  sort_c <- ordenado <- cards[order(cards$value),]
+  return(sort_c) 
+}
+
+#function for royal flush 
+royal_flush <- function(cards){
+  
+  s = 0
+  c = 0
+  h = 0
+  d = 0
+  n=6
+  counter = 0
+  straigh = TRUE
+  Flush = FALSE
+  
+  if(cards[1,3] == 1 & cards[7,3] == 13){
+    if(cards[1,2] == "spades"){
+      s = s + 1
+    }
+    if(cards[1,2] == "clubs"){
+      c = c + 1
+    }
+    if(cards[1,2] == "hearts"){
+      h = h + 1
+    }
+    if(cards[1,2] == "diamonds"){
+      d = d + 1
+    }
+    
+    if(cards[7,2] == "spades"){
+      s = s + 1
+    }
+    if(cards[7,2] == "clubs"){
+      c = c + 1
+    }
+    if(cards[7,2] == "hearts"){
+      h = h + 1
+    }
+    if(cards[7,2] == "diamonds"){
+      d = d + 1
+    }
+    
+    while (straigh & n>1) {
+      if( ((cards[n,3] == (cards[n+1,3]-1))|cards[n,3] == (cards[n+1,3])) & counter<3 ){
+        if(cards[n,2] == "spades"){
+          s = s + 1
+        }
+        if(cards[n,2] == "clubs"){
+          c = c + 1
+        }
+        if(cards[n,2] == "hearts"){
+          h = h + 1
+        }
+        if(cards[n,2] == "diamonds"){
+          d = d + 1
+        }
+        if(cards[n,3] == (cards[n+1,3]-1)){
+          counter = counter +1
+        }
+      }
+      if((cards[n,3] == (cards[n+1,3])) & counter<3){
+        if(cards[n,2] == "spades"){
+          s = s + 1
+        }
+        if(cards[n,2] == "clubs"){
+          c = c + 1
+        }
+        if(cards[n,2] == "hearts"){
+          h = h + 1
+        }
+        if(cards[n,2] == "diamonds"){
+          d = d + 1
+        }
+      }
+      if((cards[n+1,3]-cards[n,3]) > 1 & counter<3){
+        straigh = FALSE
+      }
+      n = n-1
+    }
+    
+    
+    if(d == 5 | c == 5 | s == 5 | h == 5){
+      Flush = TRUE
+    }
+    
+    if(straigh & Flush){
+      return(c(10,14))
+    }
+    if(straigh & !Flush){
+      return(c(5,14))
+    }
+  }
+  return(c(0,0))
+}
+
+#function for straigh flush
+straigh_flush <- function(cards){
+  HC = 0
+  counter = 0
+  straigh = FALSE
+  Flush = FALSE
+  broke = FALSE
+  s = 0
+  c = 0
+  h = 0
+  d = 0
+  
+  if(cards[1,2] == "spades"){
+    s =s +1
+  }
+  if(cards[1,2] == "clubs"){
+    c =c +1
+  }
+  if(cards[1,2] == "hearts"){
+    h =h +1
+  }
+  if(cards[1,2] == "diamonds"){
+    d =d +1
+  }
+  
+  for (i in 1:6) {
+    if(cards[i,3] == (cards[i+1,3]-1) & !broke){
+      counter = counter+1
+      HC = cards[i+1,3]
+      if(cards[i+1,2] == "spades"){
+        s =s +1
+      }
+      if(cards[i+1,2] == "clubs"){
+        c =c +1
+      }
+      if(cards[i+1,2] == "hearts"){
+        h =h +1
+      }
+      if(cards[i+1,2] == "diamonds"){
+        d =d +1
+      }
+    }
+    if(cards[i,3] == (cards[i+1,3]) & !broke){
+      if(cards[i+1,2] == "spades"){
+        s =s +1
+      }
+      if(cards[i+1,2] == "clubs"){
+        c =c +1
+      }
+      if(cards[i+1,2] == "hearts"){
+        h =h +1
+      }
+      if(cards[i+1,2] == "diamonds"){
+        d =d +1
+      }
+    }
+    if(cards[i+1,3] - cards[i,3] > 1 & counter < 4){
+      counter = 0
+    }
+    if(cards[i+1,3] - cards[i,3] > 1 & counter >= 4){
+      broke = !broke
+    }
+    
+  }
+  
+  
+  if(counter >= 4){
+    straigh = TRUE
+  }
+  if(s==5 | c==5 | h==5 | d==5){
+    Flush=TRUE
+  }
+  
+  if(straigh & Flush){
+    return(c(9,HC))
+  }
+  if(straigh & !Flush){
+    return(c(5,HC))
+  }
+  if(!straigh & !Flush){
+    return(c(0,0))
+  }
+  return(c(0,0))
+}
+
+  
+#function for flush
+card_flush <- function(cards){
+  
+  s = c(0,0)
+  c = c(0,0)
+  h = c(0,0)
+  d = c(0,0)
+  for (i in 1:7) {
+      if(cards[i,2] == "spades"){
+        s[1] =s[1] +1
+        s[2] = cards[i,3]
+      }
+      if(cards[i,2] == "clubs"){
+        c[1] =c[1] +1
+        c[2] = cards[i,3]
+      }
+      if(cards[i,2] == "hearts"){
+        h[1] =h[1] +1
+        h[2] = cards[i,3]
+      }
+      if(cards[i,2] == "diamonds"){
+        d[1] =d[1] +1
+        d[2] = cards[i,3]
+      }
+  }
+  if(s[1]>=5){
+    return(c(6,s[2]))
+  }
+  if(c[1]>=5){
+    return(c(6,s[2]))
+  }
+  if(h[1]>=5){
+    return(c(6,s[2]))
+  }
+  if(d[1]>=5){
+    return(c(6,s[2]))
+  }
+  return(c(0,0))
+}
+
+#Function for poker, full house, tree of a kind, two pair and pair 
+cards_poker <- function(cards){
+  poker = c(0,0)
+  pair = c(0,0)
+  three = c(0,0)
+  n=1
+  for(i in 2:7){
+    if(cards[i,3] == cards[i-1,3]){
+      n = n+1
+    }else{
+      if(n == 2){
+        pair[1]=pair[1]+1
+        pair[2]=cards[i-1,3]
+      }
+      if(n == 3){
+        three[1]=three[1]+1
+        three[2]=cards[i-1,3]
+      }
+      if(n == 4){
+        poker[1]=poker[1]+1
+        poker[2]=cards[i-1,3]
+      }
+      n = 1
+    }
+  }
+  if(poker[1]==1){
+    return(c(8,poker[2]))
+  }
+  if((three[1] == 2) | (three[1] == 1 & (pair[1]==1 | pair[1]==2))){
+    return(c(7,three[2]))
+  }
+  if(three[1]==1 & pair[1]!=1 & pair[1]!=2){
+    return(c(4,three[2]))
+  }
+  if(pair[1]==2 | pair[1]==3){
+    return(c(3,pair[2]))
+  }
+  if(pair[1]==1){
+    return(c(2,pair[2]))
+  }
+  return(c(1,cards[7,3]))
+}
+
+#function defining the hand 
+hand_defining <- function(poker_table,hand_player){
+  
+  cards = sort_cards(poker_table,hand_player)
+  
+  hand = c(0,0)
+  aux = royal_flush(cards)
+  if(aux[1] == 10){
+    return(aux)
+  }else{
+    hand = aux
+  }
+  
+  aux = straigh_flush(cards)
+  if(aux[1]==9){
+    return(aux)
+  }
+  if(hand[2]<aux[2]){
+    hand = aux
+  }
+  
+  aux = card_flush(cards)
+  if(aux[1]==6){
+    hand = aux
+  }
+  
+  aux = cards_poker(cards)
+  if(aux[1]>hand[1]){
+    return(aux)
+  }else{
+    return(hand)
+  }
+  
+}
+
+
+#function defining
+player_won <- function(game_1,game_2){
+  if(game_1[1] > game_2[1]){
+    return(1)
+  }
+  if(game_1[1] == game_2[1] & game_1[2] > game_2[2]){
+    return(1)
+  }
+  if(game_1[1] == game_2[1] & game_1[2] == game_2[2]){
+    return(3)
+  }
+  return(2)
+}
+
+prueba_straigh_flush <- data.frame(
+  face = c("ace", "ten", "jack", "queen", "king"),  
+  suit = c("spades", "spades", "spades", "spades", "spades"), 
+  value = c(1, 10, 11, 12, 13)
+)
+
+prueba_mano <- data.frame(
+  face = c("eigth", "nine"),  
+  suit = c("spades", "spades"), 
+  value = c(8,9)
+)
+```
+
+
+
+
+```{r pruebas}
+prueba_straigh_flush <- sort_cards(prueba_straigh_flush,prueba_mano)
+head(prueba_straigh_flush)
+
+resultado <- royal_flush(prueba_straigh_flush)
+resultado
+
+prueba <- hand_defining(prueba_straigh_flush,prueba_mano)
+prueba
+
+```
+
+
+
+```{r start simulation}
+
+win = rep(0,3)
+play = rep(0,10)
+
+for (i in 1:100000) {
+  
+  won = 1
+  
+  deck_shuffle = shuffle(deck)
+  players <- dealer(deck_shuffle,numPlayers)
+  
+  hand_player = hand_defining(players$table,players$players[[1]])
+  play[hand_player[1]] = play[hand_player[1]]+1
+  
+  for (i in 2:numPlayers) {
+    aux = player_won(hand_player,hand_defining(players$table,players$players[[i]]))
+    if(aux == 2){
+      won = 2
+      break
+    }
+    won = aux
+  }
+  
+  win[won] = win[won] +1
+}
+
+barplot(play)
+barplot(win)
+```
 
 
 
