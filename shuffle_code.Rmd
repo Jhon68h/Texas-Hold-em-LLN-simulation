@@ -410,26 +410,16 @@ prueba_mano <- data.frame(
 
 
 
-```{r pruebas}
-prueba_straigh_flush <- sort_cards(prueba_straigh_flush,prueba_mano)
-head(prueba_straigh_flush)
-
-resultado <- royal_flush(prueba_straigh_flush)
-resultado
-
-prueba <- hand_defining(prueba_straigh_flush,prueba_mano)
-prueba
-
-```
-
-
 
 ```{r start simulation}
+
+library(ggplot2)
+
 
 win = rep(0,3)
 play = rep(0,10)
 
-for (i in 1:100000) {
+for (i in 1:1000) {
   
   won = 1
   
@@ -451,9 +441,33 @@ for (i in 1:100000) {
   win[won] = win[won] +1
 }
 
-barplot(play)
-barplot(win)
-```
+df_win <- data.frame(Resultado = c("Ganado", "Perdido", "Empate"),
+                 Frecuencia = win)
+df_win$Resultado <- reorder(df_win$Resultado, -df_win$Frecuencia)
 
+ggplot(df_win, aes(x = Resultado, y = Frecuencia)) +
+  geom_bar(stat = "identity", fill = "grey", color = "black") +
+  geom_text(aes(label = Frecuencia), vjust = -0.5) +
+  labs(title = "Resultados de juegos",
+       x = "Resultado",
+       y = "Frecuencia") +
+  theme_classic()
+
+
+
+
+df_play <- data.frame(Valor = c("High Card", "One Pair", "Two Pair", "Trips", "Straight", "Flush", "Full House", "Four of a Kind", "Straight Flush", "Royal Flush"), Frecuencia = play)
+
+df_play$Valor <- reorder(df_play$Valor, -df_play$Frecuencia)
+
+ggplot(df_play, aes(x = Valor, y = Frecuencia)) +
+  geom_bar(stat = "identity", fill = "gray", color = "black") +
+  geom_text(aes(label = Frecuencia), vjust = -0.5) +  
+  labs(title = "Frecuencia de Valores en play",
+       x = "Valor",
+       y = "Frecuencia") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 1))
+
+```
 
 
