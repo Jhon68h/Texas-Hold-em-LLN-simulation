@@ -540,7 +540,7 @@ player_won <- function(game_1,game_2){
     if(game_1[3] < game_2[3]){
       return(2)
     }
-    return(2)
+    return(3)
   }
   return(2)
 }
