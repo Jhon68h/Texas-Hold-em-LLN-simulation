@@ -1,10 +1,16 @@
 ---
-  title: "Poker texas hold'em"
-output: html_document
+title: "Poker texas hold'em"
+author: "Nestor Clavijo and Jhonatan Hernández"
+output: 
+  html_document:
 date: "2023-11-15"
 ---
   
-Creación del mazo de cartas, se crea como un data frame
+#Creación del mazo de cartas y funciones para repartirlas 
+
+## Definicion de el maso como un Data frame
+
+Para emular el mazo de cartas se utiliza un data frame  
 
 ```{r deck}
 deck <- data.frame(
@@ -28,7 +34,9 @@ deck <- data.frame(
 )
 ```
 
+## Defincion de la funcion shuffle 
 
+Esto expliquelo usted jhonatan no se que decir ahi xd 
 
 ```{r function shuffle}
 
@@ -40,11 +48,21 @@ shuffle <- function(deck) {
 
 shuffle_deck <- shuffle(deck)
 
-dealer <- function(shuffle_deck, n){
+```
+
+
+## Definicion de la funcion dealer 
+
+Esta funcion se encarga de darle a cada jugador dos cartas y repartir las cartas de la mesa, esto lo hara emulanod cada juagador como un data frame de dos cartas y lo agregara a un vector, que asu vez sera agregado a una lista para que se encuentren los jugadores y el data frame de las cartas de la mesa 
+
+
+```{r function dealer}
+  dealer <- function(shuffle_deck, n){
   
   cards_per_player <- 2
   players = vector("list", length = n)
   
+  # Reparticion de las cartas segun en la posicion en la que se encuentren 
   for(i in 1:n){
     firts <- (i)
     last <- (i + n)
@@ -52,30 +70,49 @@ dealer <- function(shuffle_deck, n){
     
   }
   
+  # se ignoran las cartas ya repartidas y se ignora una mas para agregar las tres siguientes en fila 
   remaining_cards <- shuffle_deck[(n * cards_per_player + 2):(n * cards_per_player + 4), ]
+  #A la posicion en la que quedamos se ignora la siguiente carta y se define la siguiente a esa
   turn <- shuffle_deck[(n * cards_per_player + 6),]
+  #A la posicion en la que quedamos se ignora la siguiente carta y se define la siguiente a esa
   river <- shuffle_deck[(n * cards_per_player + 8),]
   
+  #se unen las dos cartas resntantes al data frame de las cartas de la mesa 
   remaining_cards <- merge(remaining_cards,turn,all = TRUE)
   remaining_cards <- merge(remaining_cards,river,all = TRUE)
   
   return(list(players = players, table = remaining_cards))
 }
+```
 
+## Se prueban las funciones creadas
+
+En esta seccion simplemente se prueban las funciones que se han creado para observar su funcionamiento
+
+```{r prueba}
 numPlayers <- 2
 
 players <- dealer(shuffle_deck, numPlayers)
+
+print(shuffle_deck)
 
 for (i in 1:numPlayers) {
   print(players$players[[i]])
 }
 
+print(players$table)
+
 ```
 
+#Funciones Para evaluar las jugadas
 
+En esta parte se encuentra el codigo de las funciones auxiliares que definira que jugada tiene cada jugador y con esta salida poder comparar las salidas de los otros jugadores para determinar si el jugador perdio o gano el juego. La salida estara representada por un vector de tres numeros, el primero representara el valor de la jugada, el segundo valor respresentara la carta mas alta de dicha jugada y el ultimo representara la carta mas alta que esta fuera de la jugada.
 
+##Funciones auxiliares 
 
-```{R function for define hands}
+Aqui se definen dos funciones auxiliares una que se encarga de ordenar el data frame en funcion de el valor de cada carta y la otra se utilizara para determinar si el valor de la carta es un as o no 
+
+```{R auxiliar functions}
 #function to extract and sort the cards 
 sort_cards <- function(hand_Table,hand_Player){
   cards <- merge(hand_Table,hand_Player, all = TRUE)
@@ -83,9 +120,26 @@ sort_cards <- function(hand_Table,hand_Player){
   return(sort_c) 
 }
 
+#Function auxiliar for cards_poker
+is_ace <- function(value){
+  if(value == 1){
+    return(14)
+  }
+  return(value)
+}
+
+```
+
+##Funcion Royal Flush
+
+Esta funcion tendra tres posibles salidas la primera es si salio el royal flush, la segunda es si salio una escalera real pero sin color y la ultima la cual representara que no existe ninguna de estas dos jugadas.
+
+```{r function for royal flush}
+
 #function for royal flush 
 royal_flush <- function(cards){
   
+  #definicion de variables auxiliares 
   s = 0
   c = 0
   h = 0
@@ -95,6 +149,8 @@ royal_flush <- function(cards){
   straigh = TRUE
   Flush = FALSE
   
+  #se verifica si cumple la condicion inicial de que la ultima y la primer carta 
+  #y se define el color que tienen 
   if(cards[1,3] == 1 & cards[7,3] == 13){
     if(cards[1,2] == "spades"){
       s = s + 1
@@ -122,6 +178,7 @@ royal_flush <- function(cards){
       d = d + 1
     }
     
+    #While que define si la escalera se cumple si no cambia el valor de verdad del straigh
     while (straigh & n>1) {
       if( ((cards[n,3] == (cards[n+1,3]-1))|cards[n,3] == (cards[n+1,3])) & counter<3 ){
         if(cards[n,2] == "spades"){
@@ -160,11 +217,12 @@ royal_flush <- function(cards){
       n = n-1
     }
     
-    
+    #Determina si cumple la condicion del color 
     if(d == 5 | c == 5 | s == 5 | h == 5){
       Flush = TRUE
     }
     
+    #Retorno dependiendo de los valores obtenidos 
     if(straigh & Flush){
       return(c(10,14,0))
     }
@@ -174,6 +232,13 @@ royal_flush <- function(cards){
   }
   return(c(0,0,0))
 }
+```
+
+##Funcion straigh flush
+
+Esta funcion tendra tres posibles salidas la primera es si salio escalera con color, la segunda es si salio una escalera pero sin color y la ultima la cual representara que no existe ninguna de estas dos jugadas.
+
+```{r function for straigh flush}
 
 #function for straigh flush
 straigh_flush <- function(cards){
@@ -187,6 +252,7 @@ straigh_flush <- function(cards){
   h = 0
   d = 0
   
+  #se define el color de la carta en donde se empieza la iteracion
   if(cards[1,2] == "spades"){
     s =s +1
   }
@@ -200,7 +266,9 @@ straigh_flush <- function(cards){
     d =d +1
   }
   
+  #se realiza un ciclo en donde se comprueba si la carta siguiente es continua a la anterior 
   for (i in 1:6) {
+    #comprueba si la siguiente es una mayor a la carta actual
     if(cards[i,3] == (cards[i+1,3]-1) & !broke){
       counter = counter+1
       HC = cards[i+1,3]
@@ -217,6 +285,7 @@ straigh_flush <- function(cards){
         d =d +1
       }
     }
+    #comprueba si el valor es exactamente igual que el de la carta actual 
     if(cards[i,3] == (cards[i+1,3]) & !broke){
       if(cards[i+1,2] == "spades"){
         s =s +1
@@ -231,16 +300,18 @@ straigh_flush <- function(cards){
         d =d +1
       }
     }
+    #define si la carta siguiente no coincide para hacer una escalera 
     if(cards[i+1,3] - cards[i,3] > 1 & counter < 4){
       counter = 0
     }
+    #define si la carta siguiente no tiene una escalera pero ya se tiene una escalera 
     if(cards[i+1,3] - cards[i,3] > 1 & counter >= 4){
       broke = !broke
     }
     
   }
   
-  
+  #condicionales para saber si existe la escalera y si existe el color 
   if(counter >= 4){
     straigh = TRUE
   }
@@ -248,6 +319,7 @@ straigh_flush <- function(cards){
     Flush=TRUE
   }
   
+  #retorno de las funciones finales con respecto a los valores de straigh y flush
   if(straigh & Flush){
     return(c(9,HC,0))
   }
@@ -259,8 +331,14 @@ straigh_flush <- function(cards){
   }
   return(c(0,0,0))
 }
+```
 
-  
+## Funcion flush
+
+Esta funcion se encargara de definir si existen cinco cartas con el mismo valor se suit tendra solo dos posibles retornos si existe la jugada y si no existe la jugada 
+
+```{r flush}
+
 #function for flush
 card_flush <- function(cards){
   
@@ -268,6 +346,8 @@ card_flush <- function(cards){
   c = c(0,0)
   h = c(0,0)
   d = c(0,0)
+  
+  #mira cada carta y segun el color lo guarda en su respectivo vector con su respectivo valor 
   for (i in 1:7) {
       if(cards[i,2] == "spades"){
         s[1] =s[1] +1
@@ -286,44 +366,48 @@ card_flush <- function(cards){
         d[2] = cards[i,3]
       }
   }
+  #define cual tipo de color es el que salio y retorna 
   if(s[1]>=5){
-    return(c(6,s[2]))
+    return(c(6,s[2],0))
   }
   if(c[1]>=5){
-    return(c(6,s[2]))
+    return(c(6,c[2],0))
   }
   if(h[1]>=5){
-    return(c(6,s[2]))
+    return(c(6,h[2],0))
   }
   if(d[1]>=5){
-    return(c(6,s[2],0))
+    return(c(6,d[2],0))
   }
   return(c(0,0,0))
 }
+```
 
-#Function auxiliar for cards_poker
-is_ace <- function(value){
-  if(value == 1){
-    return(14)
-  }
-  return(value)
-}
+##Funcion para definir Pares trios Pokers y full house 
+
+Esta funcion se encargara de determinar cuanto se repiten cada una de las cartas tiene tres posibles salidas la primera es si una carta se repite cuatro veces, la segunda si existe una carta que se repite una vez una carta que se repite 2 veces, la tercera si existe solo una carta que se repite tres veces, la cuarta si existen dos cartas que se repiten dos veces, la quinta si existe solo una carta que se repita y la ultima si no existe ninguna carta que se repita.
+
+```{r rest of plays}
+
 
 #Function for poker, full house, tree of a kind, two pair and pair 
 cards_poker <- function(cards){
+  #se define un data frame auxiliar para unirlo al principal
   aux <- data.frame(
     face = c("F"),  
     suit = c("F"), 
     value = c(0))
-  
+  # se une dicho data frame
   cards = sort_cards(aux,cards)
   
+  #se definen los vectores que guardaran la cantidad de veces que se repite alguna carta 
   poker = c(0,0)
   pair = c(0,0)
   three = c(0,0)
   n=1
   HC = 0
   index = 8
+  #while que va determinando si existen cartas repetidas con respecto a las anteriores 
   while (index>1) {
     if(cards[index,3] == cards[index-1,3]){
       n = n+1
@@ -369,6 +453,7 @@ cards_poker <- function(cards){
     index = index - 1
   }
   
+  #Con los valores obtenidos de los vectores llenados se define la salida que tendra la funcion
   if(poker[1]==1){
     return(c(8,poker[2],HC))
   }
@@ -384,15 +469,23 @@ cards_poker <- function(cards){
   if(pair[1]==1){
     return(c(2,pair[2],HC))
   }
-  return(c(1,cards[7,3],0))
+  return(c(1,cards[8,3],0))
 }
+```
 
+## Funcion para definir la mano que obtuvo el jugador 
+
+Esta funcion utilizara las funciones definidas anteriormente para determinar cual de todas las jugadas es la que el jugador seleccionado ha obtenido 
+
+```{r Defining Hand}
 #function defining the hand 
 hand_defining <- function(poker_table,hand_player){
   
   cards = sort_cards(poker_table,hand_player)
   
   hand = c(0,0,0)
+  
+  #Define si tiene la jugada mas fuerte 
   aux = royal_flush(cards)
   if(aux[1] == 10){
     return(aux)
@@ -400,6 +493,7 @@ hand_defining <- function(poker_table,hand_player){
     hand = aux
   }
   
+  #si no la tiene determina si tiene una escalera o anteriormente obtuvo una escalera real 
   aux = straigh_flush(cards)
   if(aux[1]==9){
     return(aux)
@@ -408,11 +502,13 @@ hand_defining <- function(poker_table,hand_player){
     hand = aux
   }
   
+  #determina si el jugador tiene color 
   aux = card_flush(cards)
   if(aux[1]==6){
     hand = aux
   }
   
+  #Por ultimo define si tiene alguna de las jugadas restantes para retornar el valor de la mano 
   aux = cards_poker(cards)
   if(aux[1]>hand[1]){
     return(aux)
@@ -421,7 +517,13 @@ hand_defining <- function(poker_table,hand_player){
   }
   
 }
+```
 
+## Funcion para definir el jugador que gano 
+
+Compara los valores de las jugadas obtenidas por cada jugador y define quien tiene mayor puntaje para ganar 
+
+```{r defining who win}
 
 #function defining
 player_won <- function(game_1,game_2){
@@ -432,28 +534,41 @@ player_won <- function(game_1,game_2){
     return(1)
   }
   if(game_1[1] == game_2[1] & game_1[2] == game_2[2]){
-    return(3)
+    if(game_1[3] > game_2[3] ){
+      return(1)
+    }
+    if(game_1[3] < game_2[3]){
+      return(2)
+    }
+    return(2)
   }
   return(2)
 }
 
 ```
+
+## Pruebitas para prueba de calidad 
+
 ```{r pruebitas}
 prueba_straigh_flush <- data.frame(
-  face = c("two", "two", "seven", "seven", "jack"),  
+  face = c("two", "three", "five", "four", "seven"),  
   suit = c("spades", "clubs", "spades", "diamonds", "hearts"), 
-  value = c(8,8,9,10,9)
+  value = c(2,3,5,4,7)
 )
 
 prueba_mano <- data.frame(
-  face = c("jack", "nine"),  
+  face = c("ten", "eigth"),  
   suit = c("clubs", "spades"), 
-  value = c(10,13)
+  value = c(10,8)
 )
 
 prueba <- hand_defining(prueba_straigh_flush,prueba_mano)
 prueba 
 ```
+
+#Simulaciones
+
+## Simulacion para observar la ley de los grandes numeros
 
 ```{r start simulation}
 
@@ -463,7 +578,7 @@ library(ggplot2)
 win = rep(0,3)
 play = rep(0,10)
 
-for (i in 1:1000) {
+for (i in 1:100) {
   
   won = 1
   
@@ -481,7 +596,6 @@ for (i in 1:1000) {
     }
     won = aux
   }
-  
   win[won] = win[won] +1
 }
 
@@ -511,5 +625,155 @@ ggplot(df_play, aes(x = Valor, y = Frecuencia)) +
        x = "Valor",
        y = "Frecuencia") +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 1))
+
+```
+
+## simulacion para definir la cantidad el porcentaje de veces que se gana con una mano 
+
+```{r :)}
+
+library(ggplot2)
+
+
+hand <- matrix(0,nrow=10,ncol=2)
+aux = 0
+aux_2 = 0
+
+for (i in 1:100) {
+  
+  deck_shuffle = shuffle(deck)
+  players <- dealer(deck_shuffle,numPlayers)
+  
+  hand_player = hand_defining(players$table,players$players[[1]])
+  
+  hand[hand_player[1],1] = hand[hand_player[1],1] + 1
+  
+  for (i in 2:numPlayers) {
+    aux = player_won(hand_player,hand_defining(players$table,players$players[[i]]))
+    if(aux == 2){
+      break
+    }
+  }
+  
+  if(aux == 1){
+    hand[hand_player[1],2] = hand[hand_player[1],2] +1 
+  }
+  
+}
+
+win_per_hand = rep(0,10)
+
+for (i in 1:10) {
+  if(hand[i,1]!=0){
+    win_per_hand[i] = hand[i,2]/hand[i,1]
+  }
+}
+
+barplot(win_per_hand)
+
+```
+
+##simulacion para definir el valor esperado de cada una de las manos 
+
+```{r :)}
+
+library(ggplot2)
+
+num_sim <- 10000
+
+jugadas <- matrix(0,nrow = 10,ncol = num_sim)
+
+for (i in 1:num_sim) {
+  
+  
+  deck_shuffle = shuffle(deck)
+  players <- dealer(deck_shuffle,numPlayers)
+  
+  hand_player = hand_defining(players$table,players$players[[1]])
+  
+  jugadas[hand_player[1],i] = 1
+  
+}
+
+  Hn = cumsum(jugadas[1,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', size=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[2,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', size=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[3,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', size=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[4,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', size=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[5,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', size=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[6,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', size=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[7,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', size=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[8,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', size=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[9,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', size=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[10,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', size=.5) +
+  ylab("H(n)")
+
 
 ```
