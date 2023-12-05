@@ -882,7 +882,7 @@ Durante la ejecución del proyecto de simulación de poker, se identificaron dis
 
 ------------------------------------------------------------------------
 
-### CONCLUCION
+# CONCLUSION
 
 A medida que aumentamos el número de iteraciones, las frecuencias observadas de las distintas manos de poker convergen hacia las probabilidades teóricas esperadas.Sin embargo se encontraron discrepancias entre las probabilidades teoricas manuales y las probabilidades teoricas encontradas en el estado del arte. Esto sucede porque en la teoria solo se usan 5 cartas ya que es la maxima cantidad que se necesita para una jugada, a diferencia del proyecto que se usan 7 cartas.
 
