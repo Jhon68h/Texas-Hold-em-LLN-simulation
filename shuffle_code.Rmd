@@ -16,7 +16,6 @@ output:
 date: "2023-11-15"
 ---
 
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/simplex/bootstrap.min.css">
 
 ------------------------------------------------------------------------
 
