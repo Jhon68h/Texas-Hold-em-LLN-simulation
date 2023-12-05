@@ -1,10 +1,50 @@
 ---
-  title: "Poker texas hold'em"
-output: html_document
+title: "Simulación Poker texas hold'em"
+author: "Nestor Clavijo and Jhonatan Hernández"
+output: 
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+    code_folding: hide
+    number_sections: true
+    highlight: tango
+    fig_caption: true
+    keep_md: true
 date: "2023-11-15"
 ---
-  
-Creación del mazo de cartas, se crea como un data frame
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/simplex/bootstrap.min.css">
+
+------------------------------------------------------------------------
+
+# INTRODUCCIÓN: EL POKER Y LA LEY DE LOS GRANDES NÚMEROS
+
+El juego de póker, con su complejidad estratégica y su componente aleatorio, ha fascinado a jugadores y matemáticos por igual. Este proyecto aprovecha la simulación de miles de partidas de póker con el objetivo de demostrar la aplicabilidad de la Ley de los Grandes Números en este contexto específico.
+
+La Ley de los Grandes Números es un principio estadístico fundamental que sugiere que, a medida que se aumenta el número de experimentos o eventos, la media de los resultados se acercará cada vez más a la probabilidad teórica.
+
+### PROBLEMA A TRATAR: LA ALEATORIEDAD DEL POKER
+
+El póker es conocido por su combinación única de habilidad y suerte. La distribución aleatoria de las cartas juega un papel crucial en la variabilidad de los resultados. Sin embargo, es común que los jugadores subestimen la influencia de la aleatoriedad a corto plazo y sobreestimen sus habilidades. Este proyecto se propone abordar la siguiente pregunta: **¿Cómo se manifiesta la Ley de los Grandes Números en el contexto del póker, y cómo afecta la aleatoriedad a corto y largo plazo las percepciones de los jugadores sobre el juego?**
+
+### OBJETIVOS
+
+-   **Simulación Detallada:** Realizar simulaciones detalladas de miles de partidas de póker, teniendo en cuenta las reglas y probabilidades inherentes al juego.
+-   **Análisis Estadístico:** Aplicar análisis estadísticos avanzados para examinar la convergencia de los resultados de las simulaciones hacia las probabilidades teóricas.
+-   **Impacto de la Variabilidad:** Investigar cómo la variabilidad a corto y largo plazo afecta las partidas de los jugadores y cómo la Ley de los Grandes Números puede proporcionar perspectivas valiosas sobre este fenómeno.
+
+------------------------------------------------------------------------
+
+# METODOLOGÍA
+
+En esta sección se presentará y explicará el codigo de la simulación, junto con gráficas y resultados
+
+## Creación del mazo de cartas y funciones para repartirlas
+
+Para emular el mazo de cartas se utiliza un data frame
 
 ```{r deck}
 deck <- data.frame(
@@ -28,7 +68,9 @@ deck <- data.frame(
 )
 ```
 
+### Defincion de la funcion shuffle
 
+Este código baraja las cartas del dataframe deck y guarda el resultado en un nuevo dataframe llamado shuffle_deck. La baraja se baraja aleatoriamente utilizando la función sample para generar un vector de índices aleatorios y luego seleccionando las filas del dataframe original en ese orden.
 
 ```{r function shuffle}
 
@@ -40,11 +82,19 @@ shuffle <- function(deck) {
 
 shuffle_deck <- shuffle(deck)
 
-dealer <- function(shuffle_deck, n){
+```
+
+### Definicion de la funcion dealer
+
+Esta funcion se encarga de darle a cada jugador dos cartas y repartir las cartas de la mesa, esto lo hara emulando cada jugador como un data frame de dos cartas y lo agregara a un vector, que asu vez sera agregado a una lista para que se encuentren los jugadores y el data frame de las cartas de la mesa
+
+```{r function dealer}
+  dealer <- function(shuffle_deck, n){
   
   cards_per_player <- 2
   players = vector("list", length = n)
   
+  # Reparticion de las cartas segun en la posicion en la que se encuentren 
   for(i in 1:n){
     firts <- (i)
     last <- (i + n)
@@ -52,30 +102,52 @@ dealer <- function(shuffle_deck, n){
     
   }
   
+  # se ignoran las cartas ya repartidas y se ignora una mas para agregar las tres siguientes en fila 
   remaining_cards <- shuffle_deck[(n * cards_per_player + 2):(n * cards_per_player + 4), ]
+  #A la posicion en la que quedamos se ignora la siguiente carta y se define la siguiente a esa
   turn <- shuffle_deck[(n * cards_per_player + 6),]
+  #A la posicion en la que quedamos se ignora la siguiente carta y se define la siguiente a esa
   river <- shuffle_deck[(n * cards_per_player + 8),]
   
+  #se unen las dos cartas resntantes al data frame de las cartas de la mesa 
   remaining_cards <- merge(remaining_cards,turn,all = TRUE)
   remaining_cards <- merge(remaining_cards,river,all = TRUE)
   
   return(list(players = players, table = remaining_cards))
 }
+```
+
+### Se prueban las funciones creadas
+
+En esta seccion simplemente se prueban las funciones que se han creado para observar su funcionamiento
+
+```{r prueba}
 
 numPlayers <- 2
 
 players <- dealer(shuffle_deck, numPlayers)
 
+print(shuffle_deck)
+
 for (i in 1:numPlayers) {
+  
   print(players$players[[i]])
+  
 }
+
+print(players$table)
 
 ```
 
+## Funciones Para evaluar las jugadas
 
+En esta parte se encuentra el codigo de las funciones auxiliares que definira que jugada tiene cada jugador y con esta salida poder comparar las salidas de los otros jugadores para determinar si el jugador perdio o gano el juego. La salida estara representada por un vector de tres numeros, el primero representara el valor de la jugada, el segundo valor respresentara la carta mas alta de dicha jugada y el ultimo representara la carta mas alta que esta fuera de la jugada.
 
+### Funciones auxiliares
 
-```{R function for define hands}
+Aqui se definen dos funciones auxiliares una que se encarga de ordenar el data frame en funcion de el valor de cada carta y la otra se utilizara para determinar si el valor de la carta es un as o no
+
+```{R auxiliar functions}
 #function to extract and sort the cards 
 sort_cards <- function(hand_Table,hand_Player){
   cards <- merge(hand_Table,hand_Player, all = TRUE)
@@ -83,9 +155,26 @@ sort_cards <- function(hand_Table,hand_Player){
   return(sort_c) 
 }
 
+#Function auxiliar for cards_poker
+is_ace <- function(value){
+  if(value == 1){
+    return(14)
+  }
+  return(value)
+}
+
+```
+
+### Funcion Royal Flush
+
+Esta funcion tendra tres posibles salidas la primera es si salio el royal flush, la segunda es si salio una escalera real pero sin color y la ultima la cual representara que no existe ninguna de estas dos jugadas.
+
+```{r function for royal flush}
+
 #function for royal flush 
 royal_flush <- function(cards){
   
+  #definicion de variables auxiliares 
   s = 0
   c = 0
   h = 0
@@ -95,6 +184,8 @@ royal_flush <- function(cards){
   straigh = TRUE
   Flush = FALSE
   
+  #se verifica si cumple la condicion inicial de que la ultima y la primer carta 
+  #y se define el color que tienen 
   if(cards[1,3] == 1 & cards[7,3] == 13){
     if(cards[1,2] == "spades"){
       s = s + 1
@@ -122,6 +213,7 @@ royal_flush <- function(cards){
       d = d + 1
     }
     
+    #While que define si la escalera se cumple si no cambia el valor de verdad del straigh
     while (straigh & n>1) {
       if( ((cards[n,3] == (cards[n+1,3]-1))|cards[n,3] == (cards[n+1,3])) & counter<3 ){
         if(cards[n,2] == "spades"){
@@ -160,20 +252,28 @@ royal_flush <- function(cards){
       n = n-1
     }
     
-    
+    #Determina si cumple la condicion del color 
     if(d == 5 | c == 5 | s == 5 | h == 5){
       Flush = TRUE
     }
     
+    #Retorno dependiendo de los valores obtenidos 
     if(straigh & Flush){
-      return(c(10,14))
+      return(c(10,14,0))
     }
     if(straigh & !Flush){
-      return(c(5,14))
+      return(c(5,14,0))
     }
   }
-  return(c(0,0))
+  return(c(0,0,0))
 }
+```
+
+### Funcion straigh flush
+
+Esta funcion tendra tres posibles salidas la primera es si salio escalera con color, la segunda es si salio una escalera pero sin color y la ultima la cual representara que no existe ninguna de estas dos jugadas.
+
+```{r function for straigh flush}
 
 #function for straigh flush
 straigh_flush <- function(cards){
@@ -187,6 +287,7 @@ straigh_flush <- function(cards){
   h = 0
   d = 0
   
+  #se define el color de la carta en donde se empieza la iteracion
   if(cards[1,2] == "spades"){
     s =s +1
   }
@@ -200,7 +301,9 @@ straigh_flush <- function(cards){
     d =d +1
   }
   
+  #se realiza un ciclo en donde se comprueba si la carta siguiente es continua a la anterior 
   for (i in 1:6) {
+    #comprueba si la siguiente es una mayor a la carta actual
     if(cards[i,3] == (cards[i+1,3]-1) & !broke){
       counter = counter+1
       HC = cards[i+1,3]
@@ -217,6 +320,7 @@ straigh_flush <- function(cards){
         d =d +1
       }
     }
+    #comprueba si el valor es exactamente igual que el de la carta actual 
     if(cards[i,3] == (cards[i+1,3]) & !broke){
       if(cards[i+1,2] == "spades"){
         s =s +1
@@ -231,16 +335,18 @@ straigh_flush <- function(cards){
         d =d +1
       }
     }
+    #define si la carta siguiente no coincide para hacer una escalera 
     if(cards[i+1,3] - cards[i,3] > 1 & counter < 4){
       counter = 0
     }
+    #define si la carta siguiente no tiene una escalera pero ya se tiene una escalera 
     if(cards[i+1,3] - cards[i,3] > 1 & counter >= 4){
       broke = !broke
     }
     
   }
   
-  
+  #condicionales para saber si existe la escalera y si existe el color 
   if(counter >= 4){
     straigh = TRUE
   }
@@ -248,19 +354,26 @@ straigh_flush <- function(cards){
     Flush=TRUE
   }
   
+  #retorno de las funciones finales con respecto a los valores de straigh y flush
   if(straigh & Flush){
-    return(c(9,HC))
+    return(c(9,HC,0))
   }
   if(straigh & !Flush){
-    return(c(5,HC))
+    return(c(5,HC,0))
   }
   if(!straigh & !Flush){
-    return(c(0,0))
+    return(c(0,0,0))
   }
-  return(c(0,0))
+  return(c(0,0,0))
 }
+```
 
-  
+### Funcion flush
+
+Esta funcion se encargara de definir si existen cinco cartas con el mismo valor se suit tendra solo dos posibles retornos si existe la jugada y si no existe la jugada
+
+```{r flush}
+
 #function for flush
 card_flush <- function(cards){
   
@@ -268,6 +381,8 @@ card_flush <- function(cards){
   c = c(0,0)
   h = c(0,0)
   d = c(0,0)
+  
+  #mira cada carta y segun el color lo guarda en su respectivo vector con su respectivo valor 
   for (i in 1:7) {
       if(cards[i,2] == "spades"){
         s[1] =s[1] +1
@@ -286,70 +401,126 @@ card_flush <- function(cards){
         d[2] = cards[i,3]
       }
   }
+  #define cual tipo de color es el que salio y retorna 
   if(s[1]>=5){
-    return(c(6,s[2]))
+    return(c(6,s[2],0))
   }
   if(c[1]>=5){
-    return(c(6,s[2]))
+    return(c(6,c[2],0))
   }
   if(h[1]>=5){
-    return(c(6,s[2]))
+    return(c(6,h[2],0))
   }
   if(d[1]>=5){
-    return(c(6,s[2]))
+    return(c(6,d[2],0))
   }
-  return(c(0,0))
+  return(c(0,0,0))
 }
+```
+
+### Funcion para definir Pares trios Pokers y full house
+
+Esta funcion se encargara de determinar cuanto se repiten cada una de las cartas tiene tres posibles salidas la primera es si una carta se repite cuatro veces, la segunda si existe una carta que se repite una vez una carta que se repite 2 veces, la tercera si existe solo una carta que se repite tres veces, la cuarta si existen dos cartas que se repiten dos veces, la quinta si existe solo una carta que se repita y la ultima si no existe ninguna carta que se repita.
+
+```{r rest of plays}
+
 
 #Function for poker, full house, tree of a kind, two pair and pair 
 cards_poker <- function(cards){
+  #se define un data frame auxiliar para unirlo al principal
+  aux <- data.frame(
+    face = c("F"),  
+    suit = c("F"), 
+    value = c(0))
+  # se une dicho data frame
+  cards = sort_cards(aux,cards)
+  
+  #se definen los vectores que guardaran la cantidad de veces que se repite alguna carta 
   poker = c(0,0)
   pair = c(0,0)
   three = c(0,0)
   n=1
-  for(i in 2:7){
-    if(cards[i,3] == cards[i-1,3]){
+  HC = 0
+  index = 8
+  #while que va determinando si existen cartas repetidas con respecto a las anteriores 
+  while (index>1) {
+    if(cards[index,3] == cards[index-1,3]){
       n = n+1
     }else{
       if(n == 2){
         pair[1]=pair[1]+1
-        pair[2]=cards[i-1,3]
+        if(pair[2] == 0 | cards[index,3] == 1){
+          pair[2]=is_ace(cards[index,3])
+        }
       }
       if(n == 3){
         three[1]=three[1]+1
-        three[2]=cards[i-1,3]
+        if(three[2] == 0 | cards[index,3] == 1){
+          three[2]=is_ace(cards[index,3])
+        }
       }
       if(n == 4){
         poker[1]=poker[1]+1
-        poker[2]=cards[i-1,3]
+        poker[2]=is_ace(cards[index,3])
+      }
+      
+      #Definition of the High Card
+      if(HC==0){
+        if(n==1){
+          HC = cards[index,3]
+        }else{
+          if(n == 2 & pair[1] == 1){
+            HC = 0
+          }
+          if(n == 2 & pair[1] == 2 ){
+            HC = is_ace(cards[index-1,3])
+          }
+          if(n == 3 ){
+            HC = is_ace(cards[index-1,3])
+          }
+          if(n == 4 ){
+            HC = is_ace(cards[index-1,3])
+          }
+        }
       }
       n = 1
     }
+    index = index - 1
   }
+  
+  #Con los valores obtenidos de los vectores llenados se define la salida que tendra la funcion
   if(poker[1]==1){
-    return(c(8,poker[2]))
+    return(c(8,poker[2],HC))
   }
   if((three[1] == 2) | (three[1] == 1 & (pair[1]==1 | pair[1]==2))){
-    return(c(7,three[2]))
+    return(c(7,three[2],0))
   }
   if(three[1]==1 & pair[1]!=1 & pair[1]!=2){
-    return(c(4,three[2]))
+    return(c(4,three[2],HC))
   }
   if(pair[1]==2 | pair[1]==3){
-    return(c(3,pair[2]))
+    return(c(3,pair[2],HC))
   }
   if(pair[1]==1){
-    return(c(2,pair[2]))
+    return(c(2,pair[2],HC))
   }
-  return(c(1,cards[7,3]))
+  return(c(1,cards[8,3],0))
 }
+```
 
+### Funcion para definir la mano que obtuvo el jugador
+
+Esta funcion utilizara las funciones definidas anteriormente para determinar cual de todas las jugadas es la que el jugador seleccionado ha obtenido
+
+```{r Defining Hand}
 #function defining the hand 
 hand_defining <- function(poker_table,hand_player){
   
   cards = sort_cards(poker_table,hand_player)
   
-  hand = c(0,0)
+  hand = c(0,0,0)
+  
+  #Define si tiene la jugada mas fuerte 
   aux = royal_flush(cards)
   if(aux[1] == 10){
     return(aux)
@@ -357,6 +528,7 @@ hand_defining <- function(poker_table,hand_player){
     hand = aux
   }
   
+  #si no la tiene determina si tiene una escalera o anteriormente obtuvo una escalera real 
   aux = straigh_flush(cards)
   if(aux[1]==9){
     return(aux)
@@ -365,11 +537,13 @@ hand_defining <- function(poker_table,hand_player){
     hand = aux
   }
   
+  #determina si el jugador tiene color 
   aux = card_flush(cards)
   if(aux[1]==6){
     hand = aux
   }
   
+  #Por ultimo define si tiene alguna de las jugadas restantes para retornar el valor de la mano 
   aux = cards_poker(cards)
   if(aux[1]>hand[1]){
     return(aux)
@@ -378,7 +552,13 @@ hand_defining <- function(poker_table,hand_player){
   }
   
 }
+```
 
+### Funcion para definir el jugador que gano
+
+Compara los valores de las jugadas obtenidas por cada jugador y define quien tiene mayor puntaje para ganar
+
+```{r defining who win}
 
 #function defining
 player_won <- function(game_1,game_2){
@@ -389,27 +569,41 @@ player_won <- function(game_1,game_2){
     return(1)
   }
   if(game_1[1] == game_2[1] & game_1[2] == game_2[2]){
+    if(game_1[3] > game_2[3] ){
+      return(1)
+    }
+    if(game_1[3] < game_2[3]){
+      return(2)
+    }
     return(3)
   }
   return(2)
 }
 
+```
+
+### Pruebitas para prueba de calidad
+
+```{r pruebitas}
 prueba_straigh_flush <- data.frame(
-  face = c("ace", "ten", "jack", "queen", "king"),  
-  suit = c("spades", "spades", "spades", "spades", "spades"), 
-  value = c(1, 10, 11, 12, 13)
+  face = c("two", "three", "five", "four", "seven"),  
+  suit = c("spades", "clubs", "spades", "diamonds", "hearts"), 
+  value = c(2,3,5,4,7)
 )
 
 prueba_mano <- data.frame(
-  face = c("eigth", "nine"),  
-  suit = c("spades", "spades"), 
-  value = c(8,9)
+  face = c("ten", "eigth"),  
+  suit = c("clubs", "spades"), 
+  value = c(10,8)
 )
+
+prueba <- hand_defining(prueba_straigh_flush,prueba_mano)
+prueba 
 ```
 
+## Simulaciones
 
-
-
+### Simulacion para observar la ley de los grandes numeros
 
 ```{r start simulation}
 
@@ -419,7 +613,7 @@ library(ggplot2)
 win = rep(0,3)
 play = rep(0,10)
 
-for (i in 1:1000) {
+for (i in 1:100) {
   
   won = 1
   
@@ -437,14 +631,13 @@ for (i in 1:1000) {
     }
     won = aux
   }
-  
   win[won] = win[won] +1
 }
 
 df_win <- data.frame(Resultado = c("Ganado", "Perdido", "Empate"),
                  Frecuencia = win)
 df_win$Resultado <- reorder(df_win$Resultado, -df_win$Frecuencia)
-
+ 
 ggplot(df_win, aes(x = Resultado, y = Frecuencia)) +
   geom_bar(stat = "identity", fill = "grey", color = "black") +
   geom_text(aes(label = Frecuencia), vjust = -0.5) +
@@ -470,4 +663,228 @@ ggplot(df_play, aes(x = Valor, y = Frecuencia)) +
 
 ```
 
+### simulacion para definir la cantidad el porcentaje de veces que se gana con una mano
 
+```{r simulacion2}
+
+library(ggplot2)
+
+hand <- matrix(0, nrow = 10, ncol = 2)
+aux = 0
+aux_2 = 0
+
+# Realizar simulación
+for (i in 1:100) {
+  deck_shuffle = shuffle(deck)
+  players <- dealer(deck_shuffle, numPlayers)
+  
+  hand_player = hand_defining(players$table, players$players[[1]])
+  
+  hand[hand_player[1], 1] = hand[hand_player[1], 1] + 1
+  
+  for (i in 2:numPlayers) {
+    aux = player_won(hand_player, hand_defining(players$table, players$players[[i]]))
+    if (aux == 2) {
+      break
+    }
+  }
+  
+  if (aux == 1) {
+    hand[hand_player[1], 2] = hand[hand_player[1], 2] + 1 
+  }
+}
+
+# Calcular la proporción de victorias por mano
+win_per_hand = rep(0, 10)
+
+for (i in 1:10) {
+  if (hand[i, 1] != 0) {
+    win_per_hand[i] = hand[i, 2] / hand[i, 1]
+  }
+}
+
+# Crear el data frame para ggplot con nombres de manos
+
+
+data_df <- data.frame(Valor = c("High Card", "One Pair", "Two Pair", "Trips", "Straight", "Flush", "Full House", "Four of a Kind", "Straight Flush", "Royal Flush"),win_ratio = win_per_hand)
+
+data_df$Valor <- reorder(data_df$Valor, -data_df$win_ratio)
+
+
+# Crear la gráfica
+ggplot(data = data_df, aes(x = Valor, y = win_ratio)) +
+  geom_bar(stat = "identity", fill = "gray", color = "black") +
+  ylim(0, 1) +
+  labs(x = "Mano", y = "Proporción de victorias") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+### simulacion para definir el valor esperado de cada una de las manos
+
+```{r}
+
+library(ggplot2)
+
+num_sim <- 100
+
+jugadas <- matrix(0,nrow = 10,ncol = num_sim)
+
+for (i in 1:num_sim) {
+  
+  
+  deck_shuffle = shuffle(deck)
+  players <- dealer(deck_shuffle,numPlayers)
+  
+  hand_player = hand_defining(players$table,players$players[[1]])
+  
+  jugadas[hand_player[1],i] = 1
+  
+}
+
+  Hn = cumsum(jugadas[1,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', linewidth=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[2,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', linewidth=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[3,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', linewidth=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[4,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', linewidth=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[5,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', linewidth=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[6,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', linewidth=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[7,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', linewidth=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[8,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', linewidth=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[9,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', linewidth=.5) +
+  ylab("H(n)")
+  
+  Hn = cumsum(jugadas[10,1:num_sim])
+  simu = data.frame(n = 1:num_sim, Hn1 = Hn)
+
+  ggplot(data=simu, aes(x=n, y= Hn1/n))+
+  geom_line() +
+  geom_abline(intercept=0.5, slope=0, color = 'red', linewidth=.5) +
+  ylab("H(n)")
+
+
+```
+
+### union de todas las gráficas de probabilidad
+
+```{r}
+library(ggplot2)
+
+# Crear un vector con los nombres correspondientes
+nombres <- c("High Card", "One Pair", "Two Pair", "Trips", "Straight", 
+             "Flush", "Full House", "Four of a Kind", "Straight Flush", 
+             "Royal Flush")
+
+# Inicializar el objeto de la gráfica fuera del bucle
+p <- ggplot() +
+  geom_abline(intercept=0.5, slope=0, color='red', linewidth=0.5) +
+  ylab("H(n)")
+
+# Crear un bucle para generar cada gráfica
+for (i in 1:10) {
+  Hn <- cumsum(jugadas[i, 1:num_sim])
+  simu <- data.frame(n=1:num_sim, Hn1=Hn)
+  
+  # Agregar el nombre correspondiente en el eje X
+  simu$nombre <- nombres[i]
+  
+  # Agregar una nueva capa a la gráfica con los datos actuales
+  p <- p + geom_line(data=simu, aes(x=n, y=Hn1/n, color=nombre), linewidth=1)
+}
+p + theme_minimal() +
+  scale_color_brewer(palette="Set3") +
+  labs(title="Graficas de probabilidad",
+       x="Simulación",
+       y="H(n)/n") +
+  theme(legend.position="right")
+
+
+```
+
+------------------------------------------------------------------------
+
+# DISCUCION Y DIFICULTADES
+
+## Discrepancias entre Probabilidades Teóricas y Prácticas en el Proyecto de Simulación de Poker
+
+Durante la ejecución del proyecto de simulación de poker, se identificaron discrepancias notables entre las probabilidades teóricas calculadas manualmente y las probabilidades prácticas derivadas del programa de simulación. Estas discrepancias plantean preguntas fundamentales sobre la precisión y confiabilidad de los modelos teóricos utilizados. La pregunta de discusión clave sería:
+
+**¿Cuáles podrían ser las fuentes subyacentes de las discrepancias entre las probabilidades teóricas y prácticas en el contexto de la simulación de poker, y cómo abordar estas diferencias para obtener conclusiones más precisas y confiables?**
+
+### Aspectos a Considerar:
+
+-   **Complejidad del Modelo Teórico:** Analizar la complejidad del modelo teórico utilizado para calcular las probabilidades y evaluar si hay simplificaciones o suposiciones que podrían haber contribuido a las diferencias observadas.
+-   **Parámetros de la Simulación:** Examinar de cerca los parámetros específicos utilizados en la simulación, como la distribución de cartas, las reglas de juego y la generación de eventos aleatorios, para asegurarse de que reflejen con precisión las condiciones del poker real.
+-   **Errores en las Fórmulas Manuales:** Identificar y corregir posibles errores en las fórmulas manuales utilizadas para calcular las probabilidades teóricas, destacando la importancia de la verificación y validación cruzada de las ecuaciones utilizadas.
+-   **Pruebas de Sensibilidad:** Realizar pruebas de sensibilidad al variar diferentes parámetros en la simulación para evaluar cómo afectan las discrepancias y determinar qué factores tienen un impacto significativo en los resultados.
+-   **Comparación con Fuentes Externas:** Contrastar los resultados de la simulación con datos y estudios externos sobre probabilidades de poker para validar la precisión del modelo y determinar si las discrepancias son consistentes con la literatura existente.
+
+------------------------------------------------------------------------
+
+### CONCLUCION
+
+A medida que aumentamos el número de iteraciones, las frecuencias observadas de las distintas manos de poker convergen hacia las probabilidades teóricas esperadas.Sin embargo se encontraron discrepancias entre las probabilidades teoricas manuales y las probabilidades teoricas encontradas en el estado del arte. Esto sucede porque en la teoria solo se usan 5 cartas ya que es la maxima cantidad que se necesita para una jugada, a diferencia del proyecto que se usan 7 cartas.
+
+Se observaron además graficas satisfactorias que comprobaban la teoria y el buen funcionamiento del programa.
